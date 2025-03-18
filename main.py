@@ -12,11 +12,18 @@ from torchgen.executorch.api.et_cpp import return_names
 GITHUB_TOKEN = None
 
 # Define the current version of the app
-APP_VERSION = "1.0.1a"
+APP_VERSION = "1.0.2a"
+
+# Path to the config file
+CONFIG_FILE = "config.json"
+
+# Initialize the repository name
+REPO_NAME = None
 
 def get_repo_name():
     """
-    Dynamically retrieves the repository name from the Git remote URL.
+    Dynamically retrieves the repository name from the Git remote URL
+    or prompts the user for input if automatic detection fails.
     """
     try:
         # Run 'git remote get-url origin' to get the remote URL
@@ -24,60 +31,88 @@ def get_repo_name():
             ["git", "remote", "get-url", "origin"], text=True
         ).strip()
 
-        # Extract the repo name from the URL
+        # Extract the repo name
         if remote_url.startswith("https://") or remote_url.startswith("http://"):
             repo_name = remote_url.split("/")[-2] + "/" + remote_url.split("/")[-1].replace(".git", "")
         elif remote_url.startswith("git@"):
             repo_name = remote_url.split(":")[-1].replace(".git", "")
         else:
             repo_name = None
-        if repo_name is not None:
-            print(f"Detected repository: {repo_name}")
-        else:
-            print(f"Could not detect repo name.")
-        return repo_name
     except subprocess.CalledProcessError:
-        print("Error: Unable to detect repository name. Ensure you're in a Git repository.")
-        return None
+        repo_name = None
 
-# Use the dynamic repo name
-REPO_NAME = get_repo_name()
+    # Confirm with the user or ask for manual input
+    if repo_name:
+        print(f"Detected repository: {repo_name}")
+        user_input = input("Is this correct? (yes/no): ").strip().lower()
+        if user_input != "yes":
+            repo_name = None
 
+    if not repo_name:
+        repo_name = input("Please enter the repository name (e.g., owner/repo): ").strip()
 
-# Hardcoded repository name
-# REPO_NAME = "RedNeckSnailSpit/IssueAutomationTest"
-
-# Path to the config file
-CONFIG_FILE = "config.json"
+    print(f"Final repository name: {repo_name}")
+    return repo_name
 
 def setup():
     """
-    Sets up the application by checking for or creating a valid config.json file.
+    Sets up the application by ensuring a valid config.json file exists
+    and that required fields (GitHub PAT and repository name) are set.
+    Prompts the user for any missing information.
     """
+    global REPO_NAME  # Declare as global so we can modify it inside the function
+    config = {}
+
+    # Load existing config if available
     if os.path.exists(CONFIG_FILE):
-        print("Config file already exists. Skipping setup.")
-        return
+        with open(CONFIG_FILE) as config_file:
+            config = json.load(config_file)
 
-    print("Config file not found. Starting setup process.")
-    print(
-        "You need to provide a Personal Access Token (PAT) from GitHub to use this script.\n"
-        "1. Go to https://github.com/settings/tokens\n"
-        "2. Generate a new token with the following required access:\n"
-        "   - repo\n"
-        "3. Copy the token and paste it below."
-    )
+    # Ensure GitHub PAT exists in config
+    if "github_token" not in config or not config["github_token"].strip():
+        print("GitHub Personal Access Token (PAT) is not configured.")
+        print(
+            "You need to provide a Personal Access Token (PAT) from GitHub to use this script.\n"
+            "1. Go to https://github.com/settings/tokens\n"
+            "2. Generate a new token with the following required access:\n"
+            "   - repo\n"
+            "3. Copy the token and paste it below."
+        )
+        pat = input("Enter your GitHub Personal Access Token (PAT): ").strip()
 
-    pat = input("Enter your GitHub Personal Access Token (PAT): ").strip()
+        if not validate_token(pat):
+            print("Exiting setup due to invalid or insecure token.")
+            sys.exit(1)
 
-    if not validate_token(pat):
-        print("Exiting setup due to invalid or insecure token.")
-        sys.exit(1)
+        config["github_token"] = pat
+        print("GitHub PAT validated and added to configuration.")
 
-    # Save the token to config.json
-    config_data = {"github_token": pat}
+    # Ensure repository name exists in config
+    if "repo_name" not in config or not config["repo_name"].strip():
+        print("Repository name is not configured.")
+        repo_name = get_repo_name()
+        config["repo_name"] = repo_name
+        REPO_NAME = repo_name  # Set the global REPO_NAME here
+    else:
+        REPO_NAME = config["repo_name"]  # Load directly from config
+
+    # Save updated config to file
+    save_config(config)
+    print("Setup complete. Your configuration has been saved to config.json.")
+
+def save_config(data):
+    """
+    Saves data to config.json, preserving existing keys if the file already exists.
+    """
+    config = {}
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE) as config_file:
+            config = json.load(config_file)
+
+    config.update(data)  # Add or update the provided data
     with open(CONFIG_FILE, "w", encoding="utf-8") as config_file:
-        json.dump(config_data, config_file, ensure_ascii=False)
-    print("Setup complete. Your PAT has been saved securely to config.json.")
+        json.dump(config, config_file, ensure_ascii=False)
+    print("Configuration saved to config.json.")
 
 def validate_token(pat):
     """
@@ -109,7 +144,6 @@ def load_config():
 
     with open(CONFIG_FILE) as config_file:
         return json.load(config_file)
-
 
 def generate_exception_hash(traceback_details):
     """
