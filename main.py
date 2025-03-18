@@ -5,14 +5,47 @@ import traceback
 import os
 import sys
 import inspect
+import subprocess
+
+from torchgen.executorch.api.et_cpp import return_names
 
 GITHUB_TOKEN = None
 
 # Define the current version of the app
-APP_VERSION = "1.0.0a"
+APP_VERSION = "1.0.1a"
+
+def get_repo_name():
+    """
+    Dynamically retrieves the repository name from the Git remote URL.
+    """
+    try:
+        # Run 'git remote get-url origin' to get the remote URL
+        remote_url = subprocess.check_output(
+            ["git", "remote", "get-url", "origin"], text=True
+        ).strip()
+
+        # Extract the repo name from the URL
+        if remote_url.startswith("https://") or remote_url.startswith("http://"):
+            repo_name = remote_url.split("/")[-2] + "/" + remote_url.split("/")[-1].replace(".git", "")
+        elif remote_url.startswith("git@"):
+            repo_name = remote_url.split(":")[-1].replace(".git", "")
+        else:
+            repo_name = None
+        if repo_name is not None:
+            print(f"Detected repository: {repo_name}")
+        else:
+            print(f"Could not detect repo name.")
+        return repo_name
+    except subprocess.CalledProcessError:
+        print("Error: Unable to detect repository name. Ensure you're in a Git repository.")
+        return None
+
+# Use the dynamic repo name
+REPO_NAME = get_repo_name()
+
 
 # Hardcoded repository name
-REPO_NAME = "RedNeckSnailSpit/IssueAutomationTest"
+# REPO_NAME = "RedNeckSnailSpit/IssueAutomationTest"
 
 # Path to the config file
 CONFIG_FILE = "config.json"
@@ -163,6 +196,9 @@ def simulate_and_report_exception():
 if __name__ == "__main__":
     setup()
     config = load_config()
+
+    print(f"Repo Name: {REPO_NAME}")
+
     GITHUB_TOKEN = config.get("github_token")
     if GITHUB_TOKEN is None:
         print("GitHub token not found in config.json. Please run the setup process.")
